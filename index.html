@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moh Senyum</title>
+  <style>
+    body {
+      background-color: #000000;
+    }
+
+    /* Container fills the viewport */
+    .video-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    /* Main canvas and video fill the video container */
+    .video-container canvas,
+    .video-container video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Center and resize cam-container */
+    .cam-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 800px;
+      height: 600px;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: -1;
+
+    }
+
+    #inputVideo,
+    #overlay {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Hide background video */
+    #video {
+      visibility: hidden;
+      /* Keeps the video hidden but allows rendering */
+      position: absolute;
+      opacity: 0;
+      /* Alternative, for added invisibility */
+    }
+
+    #countdownDisplay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 100px;
+      font-weight: 500;
+      height: 100px;
+      z-index: 2;
+    }
+
+    #montage {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 100%;
+      margin: 0 auto;
+      z-index: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="video-container">
+    <canvas id="c1"></canvas>
+
+    <div class="cam-container">
+      <div id="countdownDisplay"></div>
+      <video id="inputVideo" autoplay muted playsinline></video>
+      <canvas id="overlay"></canvas>
+    </div>
+    <video id="video" src="/media/smile_scan.mp4" autoplay loop muted playsinline></video>
+    <audio id="scanAudio">
+      <source src="/audio/scanning.mp3" type="audio/mpeg">
+      <source src="/audio/scanning.ogg" type="audio/ogg">
+      Your browser does not support the audio element.
+    </audio>
+  </div>
+  <video id="montage" src="https://res.cloudinary.com/dzwzi3idm/video/upload/v1731441767/montage_rajwis.mp4"
+    playsinline></video>
+
+  <script type="module" src="/main.js"></script>
+</body>
+
+</html>
