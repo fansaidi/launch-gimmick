@@ -129,7 +129,7 @@ function resetCountdown() {
 
 function resetScanAudio() {
   $('#scanAudio').get(0).pause();
-  $('#scanAudio').get(0).fastSeek(0);
+  // $('#scanAudio').get(0).fastSeek(0);
 }
 // jQuery initialization
 $(function () {
