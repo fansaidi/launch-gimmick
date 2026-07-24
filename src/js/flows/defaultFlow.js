@@ -5,8 +5,9 @@ export const defaultFlow = {
   name: 'Smile to Reveal',
   steps: [
     {
-      type: 'trigger.smile',
+      type: 'trigger.faceExpression',
       config: {
+        expression: 'happy',
         threshold: 0.75,
         holdMs: 3000,
         scanVideoSrc: `${import.meta.env.BASE_URL}media/smile_scan.mp4`,

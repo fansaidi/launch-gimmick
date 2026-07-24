@@ -2,19 +2,41 @@ import * as faceapi from 'face-api.js'
 import { cameraMotionService } from '../../services/cameraMotionService.js'
 import { mountChromaKeyEffect } from '../../services/chromaKeyEffect.js'
 
-// Activation/action step: waits for the user to hold a smile for `holdMs`
-// before completing. Optionally overlays a looping "scanning" video (chroma
-// keyed) and sound behind the live camera feed.
+// All expressions face-api.js's expression model can classify.
+export const FACE_EXPRESSIONS = ['happy', 'sad', 'angry', 'surprised', 'disgusted', 'fearful', 'neutral']
+
+export const meta = {
+  type: 'trigger.faceExpression',
+  category: 'trigger',
+  label: 'Face Expression',
+  description: 'Waits for the viewer to hold a facial expression (smile, surprise, anger, ...) for a set duration.',
+  fields: [
+    { key: 'expression', label: 'Expression to detect', type: 'select', options: FACE_EXPRESSIONS, default: 'happy' },
+    { key: 'threshold', label: 'Confidence threshold', type: 'number', min: 0, max: 1, step: 0.05, default: 0.75 },
+    { key: 'holdMs', label: 'Hold duration (ms)', type: 'number', min: 500, step: 500, default: 3000 },
+    { key: 'scanVideoSrc', label: 'Scanning overlay video (optional)', type: 'text' },
+    { key: 'scanAudioSrc', label: 'Scanning sound (optional)', type: 'text' },
+  ],
+}
+
+// Activation/action step: waits for the user to hold a chosen facial
+// expression for `holdMs` before completing. Optionally overlays a looping
+// "scanning" video (chroma keyed) and sound behind the live camera feed.
 export function render(container, config) {
   const {
+    expression = 'happy',
     threshold = 0.75,
     holdMs = 3000,
     scanVideoSrc,
     scanAudioSrc,
   } = config
 
+  if (!FACE_EXPRESSIONS.includes(expression)) {
+    throw new Error(`Unknown expression "${expression}". Expected one of: ${FACE_EXPRESSIONS.join(', ')}`)
+  }
+
   container.innerHTML = `
-    <div class="step step-trigger-smile video-container">
+    <div class="step step-trigger-face-expression video-container">
       ${scanVideoSrc ? '<canvas class="chroma-canvas"></canvas>' : ''}
       <div class="cam-container">
         <div class="countdown-display"></div>
@@ -37,7 +59,7 @@ export function render(container, config) {
   let isCountingDown = false
   let faceWatcher = null
   let chromaEffect = null
-  let wasSmiling = false
+  let isTriggering = false
 
   function startCountdown(onComplete) {
     if (isCountingDown) return
@@ -81,7 +103,7 @@ export function render(container, config) {
       faceWatcher = cameraMotionService.watchFace(videoEl, (result) => {
         if (!result) {
           resetCountdown()
-          wasSmiling = false
+          isTriggering = false
           return
         }
 
@@ -89,10 +111,10 @@ export function render(container, config) {
         const resized = faceapi.resizeResults(result, dims)
         faceapi.draw.drawFaceExpressions(overlayEl, resized, 0.05)
 
-        const isSmiling = result.expressions.happy > threshold
-        if (isSmiling && !wasSmiling) startCountdown(onComplete)
-        if (!isSmiling && wasSmiling) resetCountdown()
-        wasSmiling = isSmiling
+        const matched = result.expressions[expression] > threshold
+        if (matched && !isTriggering) startCountdown(onComplete)
+        if (!matched && isTriggering) resetCountdown()
+        isTriggering = matched
       })
     },
     destroy() {

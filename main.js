@@ -1,12 +1,12 @@
 import './style.css'
 import { FlowEngine } from './src/js/flow/FlowEngine.js'
 import { stepRegistry } from './src/js/flow/stepRegistry.js'
-import * as triggerSmile from './src/js/flow/steps/triggerSmile.js'
+import * as triggerFaceExpression from './src/js/flow/steps/triggerFaceExpression.js'
 import * as triggerButton from './src/js/flow/steps/triggerButton.js'
 import * as mediaVideo from './src/js/flow/steps/mediaVideo.js'
 import { flows } from './src/js/flows/index.js'
 
-stepRegistry.register('trigger.smile', triggerSmile)
+stepRegistry.register('trigger.faceExpression', triggerFaceExpression)
 stepRegistry.register('trigger.button', triggerButton)
 stepRegistry.register('media.video', mediaVideo)
 
