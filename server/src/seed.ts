@@ -1,10 +1,19 @@
-import type { Flow } from '@/lib/component-types'
+import 'dotenv/config'
 
-// Mirrors src/js/flows/*.js from the player app. Standing in for saved
-// projects until flows are persisted through a real API (phase 3).
-export const sampleFlows: Flow[] = [
+import { db } from './db/client.js'
+import { flows } from './db/schema.js'
+
+// Mirrors the player app's defaultFlow/eventLaunchFlow (src/js/flows/*.js).
+// Usage: tsx src/seed.ts <user-id>
+const userId = process.argv[2]
+if (!userId) {
+  console.error('Usage: tsx src/seed.ts <user-id>')
+  process.exit(1)
+}
+
+await db.insert(flows).values([
   {
-    id: 'smile-to-reveal',
+    userId,
     name: 'Smile to Reveal',
     steps: [
       {
@@ -29,7 +38,7 @@ export const sampleFlows: Flow[] = [
     ],
   },
   {
-    id: 'event-launch',
+    userId,
     name: 'Event Launch',
     steps: [
       { id: 'step-1', type: 'trigger.button', config: { label: 'Tap to Begin' } },
@@ -55,4 +64,7 @@ export const sampleFlows: Flow[] = [
       },
     ],
   },
-]
+])
+
+console.log('Seeded 2 flows for user', userId)
+process.exit(0)

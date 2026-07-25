@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Play, UploadCloud } from 'lucide-react'
 import { ReactFlow, ReactFlowProvider, Background, Controls, type Edge, type Node } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
-import { sampleFlows } from '@/data/sample-flows'
 import { getComponentMeta } from '@/lib/component-manifest'
-import type { ComponentCategory, Flow, FlowStep } from '@/lib/component-types'
+import type { ComponentCategory } from '@/lib/component-types'
+import { useFlowStore } from '@/store/useFlowStore'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ComponentRail } from '@/components/builder/ComponentRail'
@@ -20,59 +20,38 @@ const nodeTypes = { step: StepNode, add: AddStepNode }
 const STEP_HEIGHT = 140
 const ADD_HEIGHT = 70
 
-function createStep(type: string): FlowStep {
-  const meta = getComponentMeta(type)
-  const config: FlowStep['config'] = {}
-  meta?.fields.forEach((field) => {
-    if (field.default !== undefined) config[field.key] = field.default
-  })
-  return { id: `step-${Date.now()}-${Math.round(Math.random() * 1000)}`, type, config }
+const saveStatusLabel: Record<string, string> = {
+  saving: 'Saving…',
+  saved: 'Saved',
+  error: 'Failed to save',
 }
 
 export function FlowBuilder() {
   const { flowId } = useParams()
-  const initialFlow = useMemo<Flow>(
-    () =>
-      sampleFlows.find((f) => f.id === flowId) ?? {
-        id: flowId ?? 'new',
-        name: 'Untitled Flow',
-        steps: [],
-      },
-    [flowId],
-  )
 
-  const [flow, setFlow] = useState<Flow>(initialFlow)
-  const [selectedStepId, setSelectedStepId] = useState<string | null>(null)
+  const currentFlow = useFlowStore((s) => s.currentFlow)
+  const currentFlowStatus = useFlowStore((s) => s.currentFlowStatus)
+  const currentFlowError = useFlowStore((s) => s.currentFlowError)
+  const saveStatus = useFlowStore((s) => s.saveStatus)
+  const selectedStepId = useFlowStore((s) => s.selectedStepId)
+  const fetchFlow = useFlowStore((s) => s.fetchFlow)
+  const selectStep = useFlowStore((s) => s.selectStep)
+  const addStep = useFlowStore((s) => s.addStep)
+  const updateStepConfig = useFlowStore((s) => s.updateStepConfig)
+  const deleteStep = useFlowStore((s) => s.deleteStep)
+
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerCategory, setPickerCategory] = useState<ComponentCategory | undefined>(undefined)
-  const [insertIndex, setInsertIndex] = useState<number>(flow.steps.length)
+  const [insertIndex, setInsertIndex] = useState(0)
+
+  useEffect(() => {
+    if (flowId) fetchFlow(flowId)
+  }, [flowId, fetchFlow])
 
   function openPicker(category: ComponentCategory | undefined, index: number) {
     setPickerCategory(category)
     setInsertIndex(index)
     setPickerOpen(true)
-  }
-
-  function handleAddStep(type: string) {
-    const step = createStep(type)
-    setFlow((f) => {
-      const steps = [...f.steps]
-      steps.splice(insertIndex, 0, step)
-      return { ...f, steps }
-    })
-    setSelectedStepId(step.id)
-  }
-
-  function handleUpdateStep(stepId: string, key: string, value: string | number | boolean) {
-    setFlow((f) => ({
-      ...f,
-      steps: f.steps.map((s) => (s.id === stepId ? { ...s, config: { ...s.config, [key]: value } } : s)),
-    }))
-  }
-
-  function handleDeleteStep(stepId: string) {
-    setFlow((f) => ({ ...f, steps: f.steps.filter((s) => s.id !== stepId) }))
-    setSelectedStepId(null)
   }
 
   const { nodes, edges } = useMemo(() => {
@@ -96,7 +75,7 @@ export function FlowBuilder() {
       y += ADD_HEIGHT
     }
 
-    flow.steps.forEach((step, index) => {
+    currentFlow?.steps.forEach((step, index) => {
       addAddNode(index)
       nodes.push({
         id: step.id,
@@ -111,11 +90,19 @@ export function FlowBuilder() {
       y += STEP_HEIGHT
     })
 
-    addAddNode(flow.steps.length)
+    addAddNode(currentFlow?.steps.length ?? 0)
 
     return { nodes, edges }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flow.steps, selectedStepId])
+  }, [currentFlow?.steps, selectedStepId])
+
+  if (currentFlowStatus === 'loading' || !currentFlow) {
+    return (
+      <div className="flex h-[calc(100vh-3.5rem)] items-center justify-center text-sm text-muted-foreground">
+        {currentFlowStatus === 'error' ? `Couldn't load flow: ${currentFlowError}` : 'Loading…'}
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">
@@ -126,9 +113,9 @@ export function FlowBuilder() {
           </Link>
         </Button>
         <div className="flex flex-col">
-          <span className="text-sm font-medium">{flow.name}</span>
+          <span className="text-sm font-medium">{currentFlow.name}</span>
           <div className="flex items-center gap-1">
-            {[...new Set(flow.steps.map((s) => getComponentMeta(s.type)?.label).filter(Boolean))].map(
+            {[...new Set(currentFlow.steps.map((s) => getComponentMeta(s.type)?.label).filter(Boolean))].map(
               (label) => (
                 <Badge key={label} variant="secondary" className="font-normal">
                   {label}
@@ -138,7 +125,14 @@ export function FlowBuilder() {
           </div>
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-3">
+          {saveStatus !== 'idle' && (
+            <span
+              className={`text-xs ${saveStatus === 'error' ? 'text-destructive' : 'text-muted-foreground'}`}
+            >
+              {saveStatusLabel[saveStatus]}
+            </span>
+          )}
           <Button variant="outline">
             <Play className="size-4" />
             Preview
@@ -151,7 +145,7 @@ export function FlowBuilder() {
       </div>
 
       <div className="flex min-h-0 flex-1">
-        <ComponentRail onOpenPicker={(category) => openPicker(category, flow.steps.length)} />
+        <ComponentRail onOpenPicker={(category) => openPicker(category, currentFlow.steps.length)} />
 
         <div className="min-w-0 flex-1 bg-background">
           <ReactFlowProvider>
@@ -160,9 +154,9 @@ export function FlowBuilder() {
               edges={edges}
               nodeTypes={nodeTypes}
               onNodeClick={(_, node) => {
-                if (node.type === 'step') setSelectedStepId(node.id)
+                if (node.type === 'step') selectStep(node.id)
               }}
-              onPaneClick={() => setSelectedStepId(null)}
+              onPaneClick={() => selectStep(null)}
               fitView
               proOptions={{ hideAttribution: true }}
               defaultEdgeOptions={{ style: { stroke: 'var(--border)', strokeWidth: 2 } }}
@@ -174,12 +168,12 @@ export function FlowBuilder() {
         </div>
 
         <StepInspector
-          flow={flow}
+          flow={currentFlow}
           selectedStepId={selectedStepId}
-          onSelectStep={setSelectedStepId}
-          onUpdateStep={handleUpdateStep}
-          onDeleteStep={handleDeleteStep}
-          onClose={() => setSelectedStepId(null)}
+          onSelectStep={selectStep}
+          onUpdateStep={updateStepConfig}
+          onDeleteStep={deleteStep}
+          onClose={() => selectStep(null)}
         />
       </div>
 
@@ -187,7 +181,7 @@ export function FlowBuilder() {
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         category={pickerCategory}
-        onSelect={handleAddStep}
+        onSelect={(type) => addStep(type, insertIndex)}
       />
     </div>
   )
