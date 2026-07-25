@@ -1,23 +1,15 @@
 import type { NextFunction, Request, Response } from 'express'
-import { createClient } from '@supabase/supabase-js'
+import { createRemoteJWKSet, jwtVerify } from 'jose'
 
 const supabaseUrl = process.env.SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are not set')
+if (!supabaseUrl) {
+  throw new Error('SUPABASE_URL is not set')
 }
 
-// Service-role client used only to verify user access tokens - never
-// exposed to clients, never used to bypass RLS on their behalf.
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey)
-
-declare global {
-  namespace Express {
-    interface Request {
-      userId: string
-    }
-  }
-}
+// Verifies the JWT's signature locally against Supabase's published
+// signing keys instead of round-tripping to Supabase Auth on every
+// request. jose caches/refreshes the key set on its own.
+const jwks = createRemoteJWKSet(new URL('/auth/v1/.well-known/jwks.json', supabaseUrl))
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const header = req.headers.authorization
@@ -28,12 +20,20 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return
   }
 
-  const { data, error } = await supabaseAdmin.auth.getUser(token)
-  if (error || !data.user) {
+  try {
+    const { payload } = await jwtVerify(token, jwks)
+    if (typeof payload.sub !== 'string') throw new Error('Token missing sub claim')
+    req.userId = payload.sub
+    next()
+  } catch {
     res.status(401).json({ error: 'Invalid or expired token' })
-    return
   }
+}
 
-  req.userId = data.user.id
-  next()
+declare global {
+  namespace Express {
+    interface Request {
+      userId: string
+    }
+  }
 }
