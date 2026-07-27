@@ -1,4 +1,8 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Builds and deploys both static apps to a single GitHub Pages site:
+# the root player at /launch-gimmick/ and the builder app at
+# /launch-gimmick/builder/. Neither needs a server - the player is a
+# self-contained camera/gesture demo, and the builder talks to Supabase
+# directly from the browser (see builder/src/lib/supabase.ts).
 name: Deploy static content to Pages
 
 on:
@@ -35,16 +39,32 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-      - name: Install dependencies
+      - name: Install player dependencies
         run: npm ci
-      - name: Build
+      - name: Build player
         run: npm run build
+      - name: Install builder dependencies
+        run: npm ci
+        working-directory: ./builder
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      - name: Build builder
+        run: npm run build
+        working-directory: ./builder
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      - name: Merge builder build into player's dist
+        run: |
+          mkdir -p dist/builder
+          cp -r builder/dist/. dist/builder/
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload dist folder
+          # Upload merged dist folder (player at root, builder at /builder)
           path: './dist'
       - name: Deploy to GitHub Pages
         id: deployment

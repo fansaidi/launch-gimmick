@@ -1,37 +1,52 @@
 import { supabase } from './supabase'
 import type { Flow } from './component-types'
 
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-
-async function authedFetch(path: string, init?: RequestInit) {
-  const { data } = await supabase.auth.getSession()
-  const token = data.session?.access_token
-  if (!token) throw new Error('Not signed in')
-
-  const res = await fetch(`${apiUrl}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...init?.headers,
-    },
-  })
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => null)
-    throw new Error(body?.error ? JSON.stringify(body.error) : `Request failed: ${res.status}`)
-  }
-
-  if (res.status === 204) return null
-  return res.json()
-}
+// Talks to Supabase (PostgREST) directly - no API server in between. Row
+// Level Security on the `flows` table (see db/src/db/schema.ts) is what
+// actually scopes every query to the signed-in user; this layer just picks
+// the columns that match our Flow shape.
+const FLOW_COLUMNS = 'id, name, steps'
 
 export const api = {
-  listFlows: (): Promise<Flow[]> => authedFetch('/flows'),
-  getFlow: (id: string): Promise<Flow> => authedFetch(`/flows/${id}`),
-  createFlow: (input: { name: string; steps?: Flow['steps'] }): Promise<Flow> =>
-    authedFetch('/flows', { method: 'POST', body: JSON.stringify(input) }),
-  updateFlow: (id: string, input: { name?: string; steps?: Flow['steps'] }): Promise<Flow> =>
-    authedFetch(`/flows/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
-  deleteFlow: (id: string): Promise<null> => authedFetch(`/flows/${id}`, { method: 'DELETE' }),
+  async listFlows(): Promise<Flow[]> {
+    const { data, error } = await supabase
+      .from('flows')
+      .select(FLOW_COLUMNS)
+      .order('updated_at', { ascending: false })
+    if (error) throw new Error(error.message)
+    return data as unknown as Flow[]
+  },
+
+  async getFlow(id: string): Promise<Flow> {
+    const { data, error } = await supabase.from('flows').select(FLOW_COLUMNS).eq('id', id).single()
+    if (error) throw new Error(error.message)
+    return data as unknown as Flow
+  },
+
+  async createFlow(input: { name: string; steps?: Flow['steps'] }): Promise<Flow> {
+    const { data, error } = await supabase
+      .from('flows')
+      .insert({ name: input.name, steps: input.steps ?? [] })
+      .select(FLOW_COLUMNS)
+      .single()
+    if (error) throw new Error(error.message)
+    return data as unknown as Flow
+  },
+
+  async updateFlow(id: string, input: { name?: string; steps?: Flow['steps'] }): Promise<Flow> {
+    const { data, error } = await supabase
+      .from('flows')
+      .update({ ...input, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select(FLOW_COLUMNS)
+      .single()
+    if (error) throw new Error(error.message)
+    return data as unknown as Flow
+  },
+
+  async deleteFlow(id: string): Promise<null> {
+    const { error } = await supabase.from('flows').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+    return null
+  },
 }
