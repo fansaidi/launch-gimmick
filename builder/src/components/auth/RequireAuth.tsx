@@ -19,7 +19,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
           <p className="mb-2 font-medium">Supabase isn't configured yet</p>
           <p className="text-muted-foreground">
             Set <code className="text-foreground">VITE_SUPABASE_URL</code> and{' '}
-            <code className="text-foreground">VITE_SUPABASE_ANON_KEY</code> in{' '}
+            <code className="text-foreground">VITE_SUPABASE_PUBLISHABLE_KEY</code> in{' '}
             <code className="text-foreground">builder/.env</code> (see{' '}
             <code className="text-foreground">.env.example</code>), then reload.
           </p>
