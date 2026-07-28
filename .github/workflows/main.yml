@@ -6,9 +6,10 @@
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
+  # Runs on pushes to the active work branch. Switch this back to 'main'
+  # once this branch is merged/promoted.
   push:
-    branches: ['main']
+    branches: ['claude/project-overview-exzbg9']
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -39,6 +40,14 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+      - name: Install db dependencies
+        run: npm ci
+        working-directory: ./db
+      - name: Run migrations
+        run: npm run db:migrate
+        working-directory: ./db
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
       - name: Install player dependencies
         run: npm ci
       - name: Build player
