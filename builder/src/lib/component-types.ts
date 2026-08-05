@@ -32,4 +32,5 @@ export interface Flow {
   id: string
   name: string
   steps: FlowStep[]
+  published: boolean
 }

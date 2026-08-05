@@ -24,6 +24,7 @@ interface FlowState {
   createFlow: (name: string) => Promise<Flow>
   deleteFlow: (id: string) => Promise<void>
   renameFlow: (name: string) => void
+  publishFlow: () => Promise<void>
   selectStep: (stepId: string | null) => void
   addStep: (type: string, index: number) => void
   updateStepConfig: (stepId: string, key: string, value: string | number | boolean) => void
@@ -103,6 +104,16 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   renameFlow: (name) => {
     set((state) => (state.currentFlow ? { currentFlow: { ...state.currentFlow, name } } : {}))
     scheduleSave(get, set)
+  },
+
+  publishFlow: async () => {
+    const flow = get().currentFlow
+    if (!flow) return
+    const published = !flow.published
+    // Applied immediately (not debounced like field edits) since this is a
+    // deliberate, explicit action rather than incidental typing.
+    const updated = await api.updateFlow(flow.id, { published })
+    set((state) => (state.currentFlow ? { currentFlow: { ...state.currentFlow, published: updated.published } } : {}))
   },
 
   selectStep: (stepId) => set({ selectedStepId: stepId }),

@@ -5,7 +5,7 @@ import type { Flow } from './component-types'
 // Level Security on the `flows` table (see db/src/db/schema.ts) is what
 // actually scopes every query to the signed-in user; this layer just picks
 // the columns that match our Flow shape.
-const FLOW_COLUMNS = 'id, name, steps'
+const FLOW_COLUMNS = 'id, name, steps, published'
 
 export const api = {
   async listFlows(): Promise<Flow[]> {
@@ -33,7 +33,10 @@ export const api = {
     return data as unknown as Flow
   },
 
-  async updateFlow(id: string, input: { name?: string; steps?: Flow['steps'] }): Promise<Flow> {
+  async updateFlow(
+    id: string,
+    input: { name?: string; steps?: Flow['steps']; published?: boolean },
+  ): Promise<Flow> {
     const { data, error } = await supabase
       .from('flows')
       .update({ ...input, updated_at: new Date().toISOString() })

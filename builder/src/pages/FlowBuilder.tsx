@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Play, UploadCloud } from 'lucide-react'
+import { ArrowLeft, Copy, Play, UploadCloud } from 'lucide-react'
 import { ReactFlow, ReactFlowProvider, Background, Controls, type Edge, type Node } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
 import { getComponentMeta } from '@/lib/component-manifest'
 import type { ComponentCategory } from '@/lib/component-types'
+import { playerUrlForFlow } from '@/lib/playerUrl'
 import { useFlowStore } from '@/store/useFlowStore'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -39,10 +40,13 @@ export function FlowBuilder() {
   const addStep = useFlowStore((s) => s.addStep)
   const updateStepConfig = useFlowStore((s) => s.updateStepConfig)
   const deleteStep = useFlowStore((s) => s.deleteStep)
+  const publishFlow = useFlowStore((s) => s.publishFlow)
 
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerCategory, setPickerCategory] = useState<ComponentCategory | undefined>(undefined)
   const [insertIndex, setInsertIndex] = useState(0)
+  const [publishing, setPublishing] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (flowId) fetchFlow(flowId)
@@ -104,6 +108,25 @@ export function FlowBuilder() {
     )
   }
 
+  function handlePreview() {
+    window.open(playerUrlForFlow(currentFlow!.id), '_blank')
+  }
+
+  async function handleCopyLink() {
+    await navigator.clipboard.writeText(playerUrlForFlow(currentFlow!.id))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+
+  async function handlePublishToggle() {
+    setPublishing(true)
+    try {
+      await publishFlow()
+    } finally {
+      setPublishing(false)
+    }
+  }
+
   return (
     <div className="flex h-[calc(100dvh-3.5rem)] flex-col">
       <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4">
@@ -133,13 +156,23 @@ export function FlowBuilder() {
               {saveStatusLabel[saveStatus]}
             </span>
           )}
-          <Button variant="outline">
+          <Button variant="outline" onClick={handlePreview}>
             <Play className="size-4" />
             Preview
           </Button>
-          <Button>
+          {currentFlow.published && (
+            <Button variant="outline" onClick={handleCopyLink}>
+              <Copy className="size-4" />
+              {copied ? 'Copied!' : 'Copy link'}
+            </Button>
+          )}
+          <Button
+            variant={currentFlow.published ? 'secondary' : 'default'}
+            disabled={publishing}
+            onClick={handlePublishToggle}
+          >
             <UploadCloud className="size-4" />
-            Publish
+            {currentFlow.published ? 'Unpublish' : 'Publish'}
           </Button>
         </div>
       </div>
