@@ -11,4 +11,13 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabasePublishableKe
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabasePublishableKey || 'placeholder-publishable-key',
+  {
+    auth: {
+      // Confirmation/magic-link redirects land with the session in the URL.
+      // The implicit flow puts it in a #hash fragment, which HashRouter
+      // (see main.tsx) also owns for routing - the two collide. PKCE uses
+      // a ?code= query param instead, which HashRouter never touches.
+      flowType: 'pkce',
+    },
+  },
 )
