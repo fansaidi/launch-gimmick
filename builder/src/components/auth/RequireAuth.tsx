@@ -14,7 +14,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
   if (!isSupabaseConfigured) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-6">
+      <div className="flex min-h-dvh items-center justify-center bg-background p-6">
         <div className="max-w-md rounded-xl border border-border bg-card p-6 text-sm">
           <p className="mb-2 font-medium">Supabase isn't configured yet</p>
           <p className="text-muted-foreground">
@@ -29,7 +29,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   }
 
   if (status === 'loading') {
-    return <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Loading…</div>
+    return <div className="flex min-h-dvh items-center justify-center text-sm text-muted-foreground">Loading…</div>
   }
 
   if (status === 'signed-out') {

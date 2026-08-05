@@ -98,14 +98,14 @@ export function FlowBuilder() {
 
   if (currentFlowStatus === 'loading' || !currentFlow) {
     return (
-      <div className="flex h-[calc(100vh-3.5rem)] items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-[calc(100dvh-3.5rem)] items-center justify-center text-sm text-muted-foreground">
         {currentFlowStatus === 'error' ? `Couldn't load flow: ${currentFlowError}` : 'Loading…'}
       </div>
     )
   }
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] flex-col">
+    <div className="flex h-[calc(100dvh-3.5rem)] flex-col">
       <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4">
         <Button variant="ghost" size="icon" asChild className="size-8">
           <Link to="/">

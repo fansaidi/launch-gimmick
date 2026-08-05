@@ -6,7 +6,7 @@ import { TopNav } from '@/components/layout/TopNav'
 export function AppLayout() {
   return (
     <RequireAuth>
-      <div className="flex h-screen flex-col bg-background text-foreground">
+      <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
         <TopNav />
         <Outlet />
       </div>

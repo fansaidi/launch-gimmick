@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { ChevronDown, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -47,12 +47,10 @@ export function TopNav() {
 
       <div className="ml-auto flex items-center gap-3">
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-2 py-1 text-sm outline-none hover:bg-secondary">
-            <Avatar className="size-6">
+          <DropdownMenuTrigger className="flex items-center rounded-full outline-none hover:opacity-80">
+            <Avatar className="size-7">
               <AvatarFallback className="bg-primary/20 text-primary text-xs">JD</AvatarFallback>
             </Avatar>
-            <span>Jordan Doe</span>
-            <ChevronDown className="size-3.5 text-muted-foreground" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem>Account settings</DropdownMenuItem>
