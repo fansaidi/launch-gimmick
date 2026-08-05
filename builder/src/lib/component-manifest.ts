@@ -37,10 +37,22 @@ export const componentManifest: ComponentMeta[] = [
     type: 'media.video',
     category: 'media',
     label: 'Video',
-    description:
-      'Plays a full-bleed video. Use for an intro/loading screen or a reward reveal. Accepts a direct video file URL or a YouTube link.',
+    description: 'Plays a full-bleed video file. Use for an intro/loading screen or a reward reveal.',
     fields: [
-      { key: 'src', label: 'Video URL (file or YouTube link)', type: 'text', required: true },
+      { key: 'src', label: 'Video file URL', type: 'text', required: true },
+      { key: 'loop', label: 'Loop', type: 'boolean', default: false },
+      { key: 'muted', label: 'Muted', type: 'boolean', default: true },
+      { key: 'autoAdvance', label: 'Advance automatically when the video ends', type: 'boolean', default: true },
+    ],
+  },
+  {
+    type: 'media.embed',
+    category: 'media',
+    label: 'Video Embed',
+    description:
+      "Embeds a video from YouTube using YouTube's own player. For a direct video file (e.g. an uploaded mp4), use Video instead.",
+    fields: [
+      { key: 'src', label: 'YouTube URL', type: 'text', required: true },
       { key: 'loop', label: 'Loop', type: 'boolean', default: false },
       { key: 'muted', label: 'Muted', type: 'boolean', default: true },
       { key: 'autoAdvance', label: 'Advance automatically when the video ends', type: 'boolean', default: true },

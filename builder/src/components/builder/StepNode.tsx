@@ -15,6 +15,7 @@ function summarize(step: FlowStep): string[] {
     case 'trigger.button':
       return [String(step.config.label ?? 'Start')]
     case 'media.video':
+    case 'media.embed':
       return [step.config.autoAdvance === false ? 'tap to advance' : 'auto-advance']
     default:
       return []

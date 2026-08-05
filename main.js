@@ -4,12 +4,14 @@ import { stepRegistry } from './src/js/flow/stepRegistry.js'
 import * as triggerFaceExpression from './src/js/flow/steps/triggerFaceExpression.js'
 import * as triggerButton from './src/js/flow/steps/triggerButton.js'
 import * as mediaVideo from './src/js/flow/steps/mediaVideo.js'
+import * as mediaEmbed from './src/js/flow/steps/mediaEmbed.js'
 import { flows } from './src/js/flows/index.js'
 import { fetchFlow } from './src/js/services/supabaseClient.js'
 
 stepRegistry.register('trigger.faceExpression', triggerFaceExpression)
 stepRegistry.register('trigger.button', triggerButton)
 stepRegistry.register('media.video', mediaVideo)
+stepRegistry.register('media.embed', mediaEmbed)
 
 const container = document.getElementById('app')
 
