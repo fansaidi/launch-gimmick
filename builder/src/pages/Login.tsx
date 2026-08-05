@@ -19,7 +19,7 @@ export function Login() {
   const [submitting, setSubmitting] = useState(false)
   const [signedUp, setSignedUp] = useState(false)
 
-  if (status === 'signed-in') return <Navigate to="/" replace />
+  if (status === 'signed-in') return <Navigate to="/dashboard" replace />
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()

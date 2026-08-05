@@ -131,7 +131,7 @@ export function FlowBuilder() {
     <div className="flex h-[calc(100dvh-3.5rem)] flex-col">
       <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4">
         <Button variant="ghost" size="icon" asChild className="size-8">
-          <Link to="/">
+          <Link to="/dashboard">
             <ArrowLeft className="size-4" />
           </Link>
         </Button>

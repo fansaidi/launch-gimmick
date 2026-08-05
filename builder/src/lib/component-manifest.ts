@@ -37,7 +37,8 @@ export const componentManifest: ComponentMeta[] = [
     type: 'media.video',
     category: 'media',
     label: 'Video',
-    description: 'Plays a full-bleed video file. Use for an intro/loading screen or a reward reveal.',
+    description:
+      'Plays a full-bleed video file (e.g. an uploaded mp4). Use for an intro/loading screen or a reward reveal. For a YouTube link, use Video Embed instead.',
     fields: [
       { key: 'src', label: 'Video file URL', type: 'text', required: true },
       { key: 'loop', label: 'Loop', type: 'boolean', default: false },

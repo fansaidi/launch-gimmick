@@ -12,7 +12,7 @@ import {
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { to: '/', label: 'Dashboard', end: true },
+  { to: '/dashboard', label: 'Dashboard', end: true },
   { to: '/assets', label: 'Assets' },
   { to: '/integrations', label: 'Integrations' },
 ]
