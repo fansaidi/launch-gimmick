@@ -166,16 +166,16 @@ export function FlowBuilder() {
             </ReactFlow>
           </ReactFlowProvider>
         </div>
-
-        <StepInspector
-          flow={currentFlow}
-          selectedStepId={selectedStepId}
-          onSelectStep={selectStep}
-          onUpdateStep={updateStepConfig}
-          onDeleteStep={deleteStep}
-          onClose={() => selectStep(null)}
-        />
       </div>
+
+      <StepInspector
+        flow={currentFlow}
+        selectedStepId={selectedStepId}
+        onSelectStep={selectStep}
+        onUpdateStep={updateStepConfig}
+        onDeleteStep={deleteStep}
+        onClose={() => selectStep(null)}
+      />
 
       <ComponentPicker
         open={pickerOpen}

@@ -1,4 +1,4 @@
-import { ChevronRight, Trash2, X } from 'lucide-react'
+import { ChevronRight, Trash2 } from 'lucide-react'
 
 import { getComponentIcon } from '@/lib/component-icons'
 import { getComponentMeta } from '@/lib/component-manifest'
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 
 interface StepInspectorProps {
@@ -123,56 +124,51 @@ export function StepInspector({
   const otherSteps = flow.steps.filter((s) => s.id !== selectedStepId)
 
   return (
-    <div className="flex w-80 shrink-0 flex-col overflow-y-auto border-l border-border bg-card">
-      {selectedStep && meta ? (
-        <>
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <div className="flex items-center gap-2">
-              <Badge variant="accent">{meta.category === 'trigger' ? 'Trigger' : 'Media'}</Badge>
-              <span className="text-sm font-medium">{meta.label}</span>
+    <Sheet open={Boolean(selectedStep)} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="flex w-3/4 flex-col gap-0 p-0 sm:max-w-sm">
+        {selectedStep && meta && (
+          <>
+            <SheetHeader className="border-b border-border">
+              <div className="flex items-center gap-2">
+                <Badge variant="accent">{meta.category === 'trigger' ? 'Trigger' : 'Media'}</Badge>
+                <SheetTitle>{meta.label}</SheetTitle>
+              </div>
+            </SheetHeader>
+
+            <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
+              <p className="text-xs text-muted-foreground">{meta.description}</p>
+              {meta.fields.map((field) => (
+                <Field
+                  key={field.key}
+                  field={field}
+                  value={selectedStep.config[field.key]}
+                  onChange={(value) => onUpdateStep(selectedStep.id, field.key, value)}
+                />
+              ))}
+
+              <Separator />
+
+              <Button
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={() => onDeleteStep(selectedStep.id)}
+              >
+                <Trash2 className="size-4" />
+                Remove step
+              </Button>
             </div>
-            <Button variant="ghost" size="icon" className="size-7" onClick={onClose}>
-              <X className="size-4" />
-            </Button>
-          </div>
 
-          <div className="flex flex-col gap-4 px-4 py-4">
-            <p className="text-xs text-muted-foreground">{meta.description}</p>
-            {meta.fields.map((field) => (
-              <Field
-                key={field.key}
-                field={field}
-                value={selectedStep.config[field.key]}
-                onChange={(value) => onUpdateStep(selectedStep.id, field.key, value)}
-              />
-            ))}
-
-            <Separator />
-
-            <Button
-              variant="outline"
-              className="text-destructive hover:text-destructive"
-              onClick={() => onDeleteStep(selectedStep.id)}
-            >
-              <Trash2 className="size-4" />
-              Remove step
-            </Button>
-          </div>
-        </>
-      ) : (
-        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-          Select a step on the canvas to configure it.
-        </div>
-      )}
-
-      {otherSteps.length > 0 && (
-        <div className="mt-auto border-t border-border px-2 py-2">
-          <p className="px-2 pb-1 text-xs font-medium text-muted-foreground">Other steps</p>
-          {otherSteps.map((step) => (
-            <StepSummaryRow key={step.id} step={step} onClick={() => onSelectStep(step.id)} />
-          ))}
-        </div>
-      )}
-    </div>
+            {otherSteps.length > 0 && (
+              <div className="border-t border-border px-2 py-2">
+                <p className="px-2 pb-1 text-xs font-medium text-muted-foreground">Other steps</p>
+                {otherSteps.map((step) => (
+                  <StepSummaryRow key={step.id} step={step} onClick={() => onSelectStep(step.id)} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </SheetContent>
+    </Sheet>
   )
 }
