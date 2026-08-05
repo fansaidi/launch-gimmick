@@ -5,9 +5,9 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Deployed as a subpath alongside the root player app on the same
-  // GitHub Pages site (see .github/workflows/main.yml).
-  base: '/launch-gimmick/builder/',
+  // Deployed at the root of the GitHub Pages site; the player app takes
+  // a subpath instead (see .github/workflows/main.yml).
+  base: '/launch-gimmick/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

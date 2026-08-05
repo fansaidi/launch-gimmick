@@ -1,6 +1,6 @@
 # Builds and deploys both static apps to a single GitHub Pages site:
-# the root player at /launch-gimmick/ and the builder app at
-# /launch-gimmick/builder/. Neither needs a server - the player is a
+# the builder app at the root (/launch-gimmick/) and the player at
+# /launch-gimmick/player/. Neither needs a server - the player is a
 # self-contained camera/gesture demo, and the builder talks to Supabase
 # directly from the browser (see builder/src/lib/supabase.ts).
 name: Deploy static content to Pages
@@ -64,17 +64,19 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-      - name: Merge builder build into player's dist
+      - name: Merge both builds into one deploy directory
         run: |
-          mkdir -p dist/builder
-          cp -r builder/dist/. dist/builder/
+          mkdir -p deploy
+          cp -r builder/dist/. deploy/
+          mkdir -p deploy/player
+          cp -r dist/. deploy/player/
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload merged dist folder (player at root, builder at /builder)
-          path: './dist'
+          # Upload merged directory (builder at root, player at /player)
+          path: './deploy'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

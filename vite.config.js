@@ -6,5 +6,7 @@ export default defineConfig({
     plugins: [
         basicSsl()
     ],
-    base: '/launch-gimmick/'
+    // Deployed as a subpath on the same GitHub Pages site as the builder,
+    // which now takes the root (see .github/workflows/main.yml).
+    base: '/launch-gimmick/player/'
 })
