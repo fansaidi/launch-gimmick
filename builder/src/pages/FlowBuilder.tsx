@@ -158,6 +158,7 @@ export function FlowBuilder() {
               }}
               onPaneClick={() => selectStep(null)}
               fitView
+              fitViewOptions={{ maxZoom: 1 }}
               proOptions={{ hideAttribution: true }}
               defaultEdgeOptions={{ style: { stroke: 'var(--border)', strokeWidth: 2 } }}
             >
