@@ -40,7 +40,7 @@ export function Landing() {
           <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Sparkles className="size-4" />
           </div>
-          <span className="text-sm font-semibold">Gimmick</span>
+          <span className="text-sm font-semibold">Launchpad</span>
         </div>
         <Button asChild variant="ghost" size="sm">
           <Link to="/login">Sign in</Link>

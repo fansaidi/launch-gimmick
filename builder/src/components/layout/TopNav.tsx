@@ -24,7 +24,7 @@ export function TopNav() {
         <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
           <Sparkles className="size-4" />
         </div>
-        <span className="text-sm font-semibold">Gimmick</span>
+        <span className="text-sm font-semibold">Launchpad</span>
       </div>
 
       <nav className="flex items-center gap-1">

@@ -37,7 +37,7 @@ export function Dashboard() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold">Your Flows</h1>
-          <p className="text-sm text-muted-foreground">Gimmicks you've built, ready to customize or publish.</p>
+          <p className="text-sm text-muted-foreground">Flows you've built, ready to customize or publish.</p>
         </div>
       </div>
 
