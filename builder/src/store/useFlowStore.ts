@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 import { api } from '@/lib/api'
 import { getComponentMeta } from '@/lib/component-manifest'
-import type { Flow, FlowStep } from '@/lib/component-types'
+import type { Flow, FlowStep, StepTransition } from '@/lib/component-types'
 
 type AsyncStatus = 'idle' | 'loading' | 'error'
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
@@ -28,6 +28,7 @@ interface FlowState {
   selectStep: (stepId: string | null) => void
   addStep: (type: string, index: number) => void
   updateStepConfig: (stepId: string, key: string, value: string | number | boolean) => void
+  updateStepTransition: (stepId: string, transition: StepTransition | undefined) => void
   deleteStep: (stepId: string) => void
 }
 
@@ -135,6 +136,15 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       const steps = state.currentFlow.steps.map((s) =>
         s.id === stepId ? { ...s, config: { ...s.config, [key]: value } } : s,
       )
+      return { currentFlow: { ...state.currentFlow, steps } }
+    })
+    scheduleSave(get, set)
+  },
+
+  updateStepTransition: (stepId, transition) => {
+    set((state) => {
+      if (!state.currentFlow) return {}
+      const steps = state.currentFlow.steps.map((s) => (s.id === stepId ? { ...s, transition } : s))
       return { currentFlow: { ...state.currentFlow, steps } }
     })
     scheduleSave(get, set)

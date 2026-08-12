@@ -1,8 +1,12 @@
+import { runTransition } from './transitions.js'
+
 // Runs an ordered list of steps (activation gestures, intro/loading media,
 // action gestures, reward media, ...) one at a time. Each step type is
-// resolved from the registry, mounted into `container`, and is responsible
-// for calling onComplete() when its own exit condition is met, at which
-// point the engine tears it down and advances to the next step.
+// resolved from the registry, mounted into its own layer inside
+// `container`, and is responsible for calling onComplete() when its own
+// exit condition is met, at which point the engine advances to the next
+// step - crossfading/sliding into it first if that step has a `transition`
+// configured.
 export class FlowEngine {
   constructor(flow, container, { stepRegistry } = {}) {
     if (!stepRegistry) throw new Error('FlowEngine requires a stepRegistry')
@@ -12,6 +16,7 @@ export class FlowEngine {
     this.stepRegistry = stepRegistry
     this.index = -1
     this.activeStep = null
+    this.activeLayer = null
   }
 
   start() {
@@ -20,14 +25,11 @@ export class FlowEngine {
 
   async goTo(index) {
     if (index >= this.flow.steps.length) {
+      // Deliberately leaves the last step's content on screen (e.g. a
+      // reward video the viewer stays on) rather than tearing it down.
       this.activeStep = null
       this.flow.onComplete?.(this)
       return
-    }
-
-    if (this.activeStep) {
-      this.activeStep.destroy?.()
-      this.activeStep = null
     }
 
     const stepDef = this.flow.steps[index]
@@ -36,8 +38,24 @@ export class FlowEngine {
       throw new Error(`Unknown step type: "${stepDef.type}"`)
     }
 
+    const previousStep = this.activeStep
+    const previousLayer = this.activeLayer
+
+    const layer = document.createElement('div')
+    layer.className = 'flow-layer'
+    this.container.appendChild(layer)
+
     this.index = index
-    this.activeStep = stepModule.render(this.container, stepDef.config ?? {}, this.buildContext())
+    this.activeLayer = layer
+    this.activeStep = stepModule.render(layer, stepDef.config ?? {}, this.buildContext())
+
+    // The very first step has nothing to transition from - it just appears.
+    if (previousLayer) {
+      await runTransition(stepDef.transition, previousLayer, layer)
+      previousStep?.destroy?.()
+      previousLayer.remove()
+    }
+
     await this.activeStep.start(() => this.advance())
   }
 

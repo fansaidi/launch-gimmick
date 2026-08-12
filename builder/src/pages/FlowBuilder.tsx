@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Copy, Play, UploadCloud } from 'lucide-react'
+import { ArrowLeft, Copy, Film, Play, UploadCloud, Workflow } from 'lucide-react'
 import { ReactFlow, ReactFlowProvider, Background, Controls, type Edge, type Node } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -10,11 +10,15 @@ import { playerUrlForFlow } from '@/lib/playerUrl'
 import { useFlowStore } from '@/store/useFlowStore'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ComponentRail } from '@/components/builder/ComponentRail'
 import { ComponentPicker } from '@/components/builder/ComponentPicker'
 import { StepInspector } from '@/components/builder/StepInspector'
 import { StepNode, type StepNodeData } from '@/components/builder/StepNode'
 import { AddStepNode, type AddStepNodeData } from '@/components/builder/AddStepNode'
+import { TimelineView } from '@/components/builder/TimelineView'
+
+type EditorMode = 'flow' | 'timeline'
 
 const nodeTypes = { step: StepNode, add: AddStepNode }
 
@@ -39,6 +43,7 @@ export function FlowBuilder() {
   const selectStep = useFlowStore((s) => s.selectStep)
   const addStep = useFlowStore((s) => s.addStep)
   const updateStepConfig = useFlowStore((s) => s.updateStepConfig)
+  const updateStepTransition = useFlowStore((s) => s.updateStepTransition)
   const deleteStep = useFlowStore((s) => s.deleteStep)
   const publishFlow = useFlowStore((s) => s.publishFlow)
 
@@ -47,6 +52,7 @@ export function FlowBuilder() {
   const [insertIndex, setInsertIndex] = useState(0)
   const [publishing, setPublishing] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [mode, setMode] = useState<EditorMode>('flow')
 
   useEffect(() => {
     if (flowId) fetchFlow(flowId)
@@ -149,6 +155,18 @@ export function FlowBuilder() {
         </div>
 
         <div className="ml-auto flex items-center gap-3">
+          <Tabs value={mode} onValueChange={(value) => setMode(value as EditorMode)}>
+            <TabsList>
+              <TabsTrigger value="flow">
+                <Workflow />
+                Flow
+              </TabsTrigger>
+              <TabsTrigger value="timeline">
+                <Film />
+                Timeline
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
           {saveStatus !== 'idle' && (
             <span
               className={`text-xs ${saveStatus === 'error' ? 'text-destructive' : 'text-muted-foreground'}`}
@@ -181,24 +199,34 @@ export function FlowBuilder() {
         <ComponentRail onOpenPicker={(category) => openPicker(category, currentFlow.steps.length)} />
 
         <div className="min-w-0 flex-1 bg-background">
-          <ReactFlowProvider>
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              nodeTypes={nodeTypes}
-              onNodeClick={(_, node) => {
-                if (node.type === 'step') selectStep(node.id)
-              }}
-              onPaneClick={() => selectStep(null)}
-              fitView
-              fitViewOptions={{ maxZoom: 1 }}
-              proOptions={{ hideAttribution: true }}
-              defaultEdgeOptions={{ style: { stroke: 'var(--border)', strokeWidth: 2 } }}
-            >
-              <Background gap={20} color="var(--border)" />
-              <Controls showInteractive={false} />
-            </ReactFlow>
-          </ReactFlowProvider>
+          {mode === 'flow' ? (
+            <ReactFlowProvider>
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                nodeTypes={nodeTypes}
+                onNodeClick={(_, node) => {
+                  if (node.type === 'step') selectStep(node.id)
+                }}
+                onPaneClick={() => selectStep(null)}
+                fitView
+                fitViewOptions={{ maxZoom: 1 }}
+                proOptions={{ hideAttribution: true }}
+                defaultEdgeOptions={{ style: { stroke: 'var(--border)', strokeWidth: 2 } }}
+              >
+                <Background gap={20} color="var(--border)" />
+                <Controls showInteractive={false} />
+              </ReactFlow>
+            </ReactFlowProvider>
+          ) : (
+            <TimelineView
+              flow={currentFlow}
+              selectedStepId={selectedStepId}
+              onSelectStep={selectStep}
+              onInsertStep={(index) => openPicker(undefined, index)}
+              onUpdateTransition={updateStepTransition}
+            />
+          )}
         </div>
       </div>
 

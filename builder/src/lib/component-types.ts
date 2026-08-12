@@ -22,10 +22,21 @@ export interface ComponentMeta {
   fields: ComponentField[]
 }
 
+export type TransitionType = 'none' | 'fade' | 'slide-left' | 'slide-up' | 'zoom'
+
+export interface StepTransition {
+  type: TransitionType
+  duration: number
+}
+
 export interface FlowStep {
   id: string
   type: string
   config: Record<string, string | number | boolean | undefined>
+  // How this step enters, coming from the previous one. Irrelevant (and
+  // ignored) on the first step, since there's nothing before it to
+  // transition from.
+  transition?: StepTransition
 }
 
 export interface Flow {
