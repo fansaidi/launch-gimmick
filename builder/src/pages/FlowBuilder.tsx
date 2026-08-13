@@ -45,6 +45,7 @@ export function FlowBuilder() {
   const addStep = useFlowStore((s) => s.addStep)
   const updateStepConfig = useFlowStore((s) => s.updateStepConfig)
   const updateStepTransition = useFlowStore((s) => s.updateStepTransition)
+  const updateStepOverlay = useFlowStore((s) => s.updateStepOverlay)
   const deleteStep = useFlowStore((s) => s.deleteStep)
   const publishFlow = useFlowStore((s) => s.publishFlow)
 
@@ -266,6 +267,7 @@ export function FlowBuilder() {
         selectedStepId={selectedStepId}
         onSelectStep={selectStep}
         onUpdateStep={updateStepConfig}
+        onUpdateOverlay={updateStepOverlay}
         onDeleteStep={deleteStep}
         onClose={() => selectStep(null)}
       />

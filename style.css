@@ -72,14 +72,31 @@ body {
   z-index: 2;
 }
 
-.bg-scan-video {
-  visibility: hidden;
+/* Generic per-step "build anticipation" overlay (src/js/flow/stepOverlay.js)
+   - sits behind whatever the step itself renders, e.g. the face-expression
+   trigger's camera view (z-index 1) painting over it. */
+.step-overlay {
   position: absolute;
-  opacity: 0;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
 
-.chroma-canvas {
-  z-index: 0;
+.step-overlay-video,
+.step-overlay-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* When chroma-keyed, the canvas is the visible output - the source video
+   stays in the DOM (so it keeps decoding frames) but out of view. */
+.step-overlay-video-hidden {
+  visibility: hidden;
+  opacity: 0;
 }
 
 /* media.video */

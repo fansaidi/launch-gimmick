@@ -1,6 +1,5 @@
 import * as faceapi from 'face-api.js'
 import { cameraMotionService } from '../../services/cameraMotionService.js'
-import { mountChromaKeyEffect } from '../../services/chromaKeyEffect.js'
 
 // All expressions face-api.js's expression model can classify.
 export const FACE_EXPRESSIONS = ['happy', 'sad', 'angry', 'surprised', 'disgusted', 'fearful', 'neutral']
@@ -14,22 +13,15 @@ export const meta = {
     { key: 'expression', label: 'Expression to detect', type: 'select', options: FACE_EXPRESSIONS, default: 'happy' },
     { key: 'threshold', label: 'Confidence threshold', type: 'number', min: 0, max: 1, step: 0.05, default: 0.75 },
     { key: 'holdMs', label: 'Hold duration (ms)', type: 'number', min: 500, step: 500, default: 3000 },
-    { key: 'scanVideoSrc', label: 'Scanning overlay video (optional)', type: 'text' },
-    { key: 'scanAudioSrc', label: 'Scanning sound (optional)', type: 'text' },
   ],
 }
 
 // Activation/action step: waits for the user to hold a chosen facial
-// expression for `holdMs` before completing. Optionally overlays a looping
-// "scanning" video (chroma keyed) and sound behind the live camera feed.
+// expression for `holdMs` before completing. The "build anticipation"
+// scanning video/sound this used to render itself is now a generic
+// per-step overlay any step can have - see stepOverlay.js and FlowEngine.
 export function render(container, config) {
-  const {
-    expression = 'happy',
-    threshold = 0.75,
-    holdMs = 3000,
-    scanVideoSrc,
-    scanAudioSrc,
-  } = config
+  const { expression = 'happy', threshold = 0.75, holdMs = 3000 } = config
 
   if (!FACE_EXPRESSIONS.includes(expression)) {
     throw new Error(`Unknown expression "${expression}". Expected one of: ${FACE_EXPRESSIONS.join(', ')}`)
@@ -37,28 +29,21 @@ export function render(container, config) {
 
   container.innerHTML = `
     <div class="step step-trigger-face-expression video-container">
-      ${scanVideoSrc ? '<canvas class="chroma-canvas"></canvas>' : ''}
       <div class="cam-container">
         <div class="countdown-display"></div>
         <video class="input-video" autoplay muted playsinline></video>
         <canvas class="overlay"></canvas>
       </div>
-      ${scanVideoSrc ? `<video class="bg-scan-video" src="${scanVideoSrc}" autoplay loop muted playsinline></video>` : ''}
-      ${scanAudioSrc ? `<audio class="scan-audio" src="${scanAudioSrc}"></audio>` : ''}
     </div>
   `
 
   const videoEl = container.querySelector('.input-video')
   const overlayEl = container.querySelector('.overlay')
   const countdownEl = container.querySelector('.countdown-display')
-  const scanAudioEl = container.querySelector('.scan-audio')
-  const chromaCanvas = container.querySelector('.chroma-canvas')
-  const bgScanVideo = container.querySelector('.bg-scan-video')
 
   let countdownTimer = null
   let isCountingDown = false
   let faceWatcher = null
-  let chromaEffect = null
   let isTriggering = false
 
   function startCountdown(onComplete) {
@@ -66,7 +51,6 @@ export function render(container, config) {
     isCountingDown = true
     let secondsLeft = Math.round(holdMs / 1000)
     countdownEl.textContent = secondsLeft
-    scanAudioEl?.play()
 
     countdownTimer = setInterval(() => {
       secondsLeft -= 1
@@ -75,7 +59,6 @@ export function render(container, config) {
         clearInterval(countdownTimer)
         countdownTimer = null
         isCountingDown = false
-        scanAudioEl?.pause()
         onComplete()
       }
     }, 1000)
@@ -87,18 +70,12 @@ export function render(container, config) {
     countdownTimer = null
     isCountingDown = false
     countdownEl.textContent = ''
-    scanAudioEl?.pause()
   }
 
   return {
     async start(onComplete) {
       await cameraMotionService.ensureModelsLoaded()
       videoEl.srcObject = await cameraMotionService.getCameraStream()
-
-      if (chromaCanvas && bgScanVideo) {
-        chromaEffect = mountChromaKeyEffect(chromaCanvas, bgScanVideo)
-        chromaEffect.start()
-      }
 
       faceWatcher = cameraMotionService.watchFace(videoEl, (result) => {
         if (!result) {
@@ -120,7 +97,6 @@ export function render(container, config) {
     destroy() {
       faceWatcher?.stop()
       resetCountdown()
-      chromaEffect?.stop()
       container.innerHTML = ''
     },
   }

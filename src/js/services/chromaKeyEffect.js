@@ -1,9 +1,22 @@
-// Composites a looping "scan" video onto a canvas with greenish pixels
-// keyed out to transparent, so it can sit behind a live camera feed.
-export function mountChromaKeyEffect(canvas, video, { width = window.screen.width, height = window.screen.height } = {}) {
+function hexToRgb(hex) {
+  const clean = hex.replace('#', '')
+  const value = parseInt(clean, 16)
+  return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 }
+}
+
+// Composites a looping video onto a canvas with pixels near `keyColor`
+// keyed out to transparent, so it can sit behind a live camera feed (or
+// anything else). Matching is a simple distance-from-color check rather
+// than a hue range, which keeps it simple to reason about at any color.
+export function mountChromaKeyEffect(
+  canvas,
+  video,
+  { width = window.screen.width, height = window.screen.height, keyColor = '#00ff00', tolerance = 90 } = {},
+) {
   canvas.width = width
   canvas.height = height
   const ctx = canvas.getContext('2d')
+  const { r: kr, g: kg, b: kb } = hexToRgb(keyColor)
   let timer = null
   let running = false
 
@@ -16,7 +29,10 @@ export function mountChromaKeyEffect(canvas, video, { width = window.screen.widt
       const r = frame.data[i * 4]
       const g = frame.data[i * 4 + 1]
       const b = frame.data[i * 4 + 2]
-      if (r >= 30 && r <= 200 && g >= 140 && g <= 255 && b <= 120) {
+      const dr = r - kr
+      const dg = g - kg
+      const db = b - kb
+      if (Math.sqrt(dr * dr + dg * dg + db * db) <= tolerance) {
         frame.data[i * 4 + 3] = 0
       }
     }

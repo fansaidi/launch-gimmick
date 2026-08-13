@@ -2,7 +2,8 @@ import { ChevronRight, Trash2 } from 'lucide-react'
 
 import { getComponentIcon } from '@/lib/component-icons'
 import { getComponentMeta } from '@/lib/component-manifest'
-import type { ComponentField, Flow, FlowStep } from '@/lib/component-types'
+import type { ComponentField, Flow, FlowStep, StepOverlay } from '@/lib/component-types'
+import { OverlayFields } from '@/components/builder/OverlayFields'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,6 +18,7 @@ interface StepInspectorProps {
   selectedStepId: string | null
   onSelectStep: (stepId: string) => void
   onUpdateStep: (stepId: string, key: string, value: string | number | boolean) => void
+  onUpdateOverlay: (stepId: string, overlay: StepOverlay | undefined) => void
   onDeleteStep: (stepId: string) => void
   onClose: () => void
 }
@@ -116,6 +118,7 @@ export function StepInspector({
   selectedStepId,
   onSelectStep,
   onUpdateStep,
+  onUpdateOverlay,
   onDeleteStep,
   onClose,
 }: StepInspectorProps) {
@@ -145,6 +148,13 @@ export function StepInspector({
                   onChange={(value) => onUpdateStep(selectedStep.id, field.key, value)}
                 />
               ))}
+
+              <Separator />
+
+              <OverlayFields
+                overlay={selectedStep.overlay}
+                onChange={(overlay) => onUpdateOverlay(selectedStep.id, overlay)}
+              />
 
               <Separator />
 

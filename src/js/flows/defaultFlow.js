@@ -6,12 +6,11 @@ export const defaultFlow = {
   steps: [
     {
       type: 'trigger.faceExpression',
-      config: {
-        expression: 'happy',
-        threshold: 0.75,
-        holdMs: 3000,
-        scanVideoSrc: `${import.meta.env.BASE_URL}media/smile_scan.mp4`,
-        scanAudioSrc: `${import.meta.env.BASE_URL}audio/scanning.mp3`,
+      config: { expression: 'happy', threshold: 0.75, holdMs: 3000 },
+      overlay: {
+        videoSrc: `${import.meta.env.BASE_URL}media/smile_scan.mp4`,
+        audioSrc: `${import.meta.env.BASE_URL}audio/scanning.mp3`,
+        chromaKey: true,
       },
     },
     {

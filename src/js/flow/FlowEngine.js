@@ -1,4 +1,5 @@
 import { runTransition } from './transitions.js'
+import { mountStepOverlay } from './stepOverlay.js'
 
 // Runs an ordered list of steps (activation gestures, intro/loading media,
 // action gestures, reward media, ...) one at a time. Each step type is
@@ -6,7 +7,8 @@ import { runTransition } from './transitions.js'
 // `container`, and is responsible for calling onComplete() when its own
 // exit condition is met, at which point the engine advances to the next
 // step - crossfading/sliding into it first if that step has a `transition`
-// configured.
+// configured. A step can also carry an `overlay` (see stepOverlay.js) that
+// plays behind its content for as long as it's active.
 export class FlowEngine {
   constructor(flow, container, { stepRegistry } = {}) {
     if (!stepRegistry) throw new Error('FlowEngine requires a stepRegistry')
@@ -17,6 +19,7 @@ export class FlowEngine {
     this.index = -1
     this.activeStep = null
     this.activeLayer = null
+    this.activeOverlay = null
   }
 
   start() {
@@ -40,6 +43,7 @@ export class FlowEngine {
 
     const previousStep = this.activeStep
     const previousLayer = this.activeLayer
+    const previousOverlay = this.activeOverlay
 
     const layer = document.createElement('div')
     layer.className = 'flow-layer'
@@ -48,10 +52,12 @@ export class FlowEngine {
     this.index = index
     this.activeLayer = layer
     this.activeStep = stepModule.render(layer, stepDef.config ?? {}, this.buildContext())
+    this.activeOverlay = mountStepOverlay(layer, stepDef.overlay)
 
     // The very first step has nothing to transition from - it just appears.
     if (previousLayer) {
       await runTransition(stepDef.transition, previousLayer, layer)
+      previousOverlay?.stop()
       previousStep?.destroy?.()
       previousLayer.remove()
     }

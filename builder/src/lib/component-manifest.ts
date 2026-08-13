@@ -22,8 +22,6 @@ export const componentManifest: ComponentMeta[] = [
       },
       { key: 'threshold', label: 'Confidence threshold', type: 'number', min: 0, max: 1, step: 0.05, default: 0.75 },
       { key: 'holdMs', label: 'Hold duration (ms)', type: 'number', min: 500, step: 500, default: 3000 },
-      { key: 'scanVideoSrc', label: 'Scanning overlay video (optional)', type: 'text' },
-      { key: 'scanAudioSrc', label: 'Scanning sound (optional)', type: 'text' },
     ],
   },
   {

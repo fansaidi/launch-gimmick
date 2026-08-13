@@ -29,6 +29,20 @@ export interface StepTransition {
   duration: number
 }
 
+// A "build anticipation" layer that plays behind a step's own content for
+// as long as that step is active - e.g. a looping scan/sparkle video while
+// a trigger waits for the viewer. See src/js/flow/stepOverlay.js (player).
+export interface StepOverlay {
+  videoSrc: string
+  audioSrc?: string
+  chromaKey?: boolean
+  // Hex color to key out when chromaKey is on, e.g. "#00ff00".
+  chromaKeyColor?: string
+  // How long to wait after the step mounts before the overlay starts
+  // playing, in ms.
+  delayMs?: number
+}
+
 export interface FlowStep {
   id: string
   type: string
@@ -37,6 +51,7 @@ export interface FlowStep {
   // ignored) on the first step, since there's nothing before it to
   // transition from.
   transition?: StepTransition
+  overlay?: StepOverlay
 }
 
 export interface Flow {
