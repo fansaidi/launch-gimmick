@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ComponentRail } from '@/components/builder/ComponentRail'
 import { ComponentPicker } from '@/components/builder/ComponentPicker'
+import { ScenePreview } from '@/components/builder/ScenePreview'
 import { StepInspector } from '@/components/builder/StepInspector'
 import { StepNode, type StepNodeData } from '@/components/builder/StepNode'
 import { AddStepNode, type AddStepNodeData } from '@/components/builder/AddStepNode'
@@ -133,6 +134,10 @@ export function FlowBuilder() {
     }
   }
 
+  // The scene shown in the big preview stage - whichever one is selected,
+  // falling back to the first scene so there's always something to show.
+  const previewStep = currentFlow.steps.find((s) => s.id === selectedStepId) ?? currentFlow.steps[0] ?? null
+
   return (
     <div className="flex h-[calc(100dvh-3.5rem)] flex-col">
       <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4">
@@ -219,13 +224,26 @@ export function FlowBuilder() {
               </ReactFlow>
             </ReactFlowProvider>
           ) : (
-            <TimelineView
-              flow={currentFlow}
-              selectedStepId={selectedStepId}
-              onSelectStep={selectStep}
-              onInsertStep={(index) => openPicker(undefined, index)}
-              onUpdateTransition={updateStepTransition}
-            />
+            <div className="flex size-full flex-col">
+              <div className="flex flex-1 items-center justify-center overflow-hidden bg-black/40 p-6">
+                {previewStep ? (
+                  <div className="aspect-video w-full max-h-full overflow-hidden rounded-xl bg-black shadow-lg">
+                    <ScenePreview step={previewStep} />
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Add a scene to preview it here.</p>
+                )}
+              </div>
+              <div className="h-48 shrink-0 border-t border-border">
+                <TimelineView
+                  flow={currentFlow}
+                  selectedStepId={previewStep?.id ?? null}
+                  onSelectStep={selectStep}
+                  onInsertStep={(index) => openPicker(undefined, index)}
+                  onUpdateTransition={updateStepTransition}
+                />
+              </div>
+            </div>
           )}
         </div>
       </div>
