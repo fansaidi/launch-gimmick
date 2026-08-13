@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Settings2 } from 'lucide-react'
 
 import { getComponentIcon } from '@/lib/component-icons'
 import { getComponentMeta } from '@/lib/component-manifest'
@@ -19,8 +19,11 @@ import { ScenePreview } from './ScenePreview'
 
 interface TimelineViewProps {
   flow: Flow
-  selectedStepId: string | null
-  onSelectStep: (stepId: string) => void
+  // Which scene's thumbnail is highlighted - i.e. whichever one is showing
+  // in the big stage above, not necessarily the one being edited.
+  previewStepId: string | null
+  onPreviewStep: (stepId: string) => void
+  onOpenSettings: (stepId: string) => void
   onInsertStep: (index: number) => void
   onUpdateTransition: (stepId: string, transition: StepTransition | undefined) => void
 }
@@ -53,11 +56,13 @@ function SceneCard({
   index,
   selected,
   onClick,
+  onOpenSettings,
 }: {
   step: FlowStep
   index: number
   selected: boolean
   onClick: () => void
+  onOpenSettings: () => void
 }) {
   const meta = getComponentMeta(step.type)
   const Icon = getComponentIcon(step.type)
@@ -76,6 +81,17 @@ function SceneCard({
         <span className="absolute left-1.5 top-1.5 flex size-5 items-center justify-center rounded bg-black/60 text-[10px] font-medium text-white">
           {index + 1}
         </span>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onOpenSettings()
+          }}
+          title="Edit settings"
+          className="absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded bg-black/60 text-white transition-colors hover:bg-primary"
+        >
+          <Settings2 className="size-3" />
+        </button>
       </div>
       <div className="flex items-center gap-1.5 border-t border-border px-2 py-1.5">
         <div className="flex size-5 shrink-0 items-center justify-center rounded bg-accent text-accent-foreground">
@@ -100,16 +116,7 @@ function TransitionConnector({
   const active = Boolean(transition && transition.type !== 'none')
 
   return (
-    <div className="group relative flex w-12 shrink-0 flex-col items-center justify-center">
-      <button
-        type="button"
-        onClick={onInsert}
-        title="Insert a scene here"
-        className="absolute -top-7 flex size-5 items-center justify-center rounded-full border border-dashed border-muted-foreground/50 text-muted-foreground opacity-0 transition-opacity hover:border-primary hover:text-primary group-hover:opacity-100"
-      >
-        <Plus className="size-3" />
-      </button>
-
+    <div className="relative flex w-12 shrink-0 flex-col items-center justify-center">
       <div className="h-px w-4 bg-border" />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -160,11 +167,26 @@ function TransitionConnector({
         </DropdownMenuContent>
       </DropdownMenu>
       <div className="h-px w-4 bg-border" />
+      <button
+        type="button"
+        onClick={onInsert}
+        title="Insert a scene here"
+        className="mt-1.5 flex size-5 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+      >
+        <Plus className="size-3" />
+      </button>
     </div>
   )
 }
 
-export function TimelineView({ flow, selectedStepId, onSelectStep, onInsertStep, onUpdateTransition }: TimelineViewProps) {
+export function TimelineView({
+  flow,
+  previewStepId,
+  onPreviewStep,
+  onOpenSettings,
+  onInsertStep,
+  onUpdateTransition,
+}: TimelineViewProps) {
   if (flow.steps.length === 0) {
     return (
       <div className="flex size-full items-center justify-center">
@@ -190,8 +212,9 @@ export function TimelineView({ flow, selectedStepId, onSelectStep, onInsertStep,
             <SceneCard
               step={step}
               index={index}
-              selected={step.id === selectedStepId}
-              onClick={() => onSelectStep(step.id)}
+              selected={step.id === previewStepId}
+              onClick={() => onPreviewStep(step.id)}
+              onOpenSettings={() => onOpenSettings(step.id)}
             />
           </Fragment>
         ))}

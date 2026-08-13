@@ -54,6 +54,7 @@ export function FlowBuilder() {
   const [publishing, setPublishing] = useState(false)
   const [copied, setCopied] = useState(false)
   const [mode, setMode] = useState<EditorMode>('flow')
+  const [previewStepId, setPreviewStepId] = useState<string | null>(null)
 
   useEffect(() => {
     if (flowId) fetchFlow(flowId)
@@ -134,9 +135,20 @@ export function FlowBuilder() {
     }
   }
 
-  // The scene shown in the big preview stage - whichever one is selected,
-  // falling back to the first scene so there's always something to show.
-  const previewStep = currentFlow.steps.find((s) => s.id === selectedStepId) ?? currentFlow.steps[0] ?? null
+  // The scene shown in the big preview stage. Clicking a scene card only
+  // changes this (see onOpenSettings below for the settings-panel path) -
+  // falls back to whatever's selected elsewhere (e.g. a Flow-mode node),
+  // then the first scene, so there's always something to show.
+  const previewStep =
+    currentFlow.steps.find((s) => s.id === previewStepId) ??
+    currentFlow.steps.find((s) => s.id === selectedStepId) ??
+    currentFlow.steps[0] ??
+    null
+
+  function handleOpenSceneSettings(stepId: string) {
+    setPreviewStepId(stepId)
+    selectStep(stepId)
+  }
 
   return (
     <div className="flex h-[calc(100dvh-3.5rem)] flex-col">
@@ -237,8 +249,9 @@ export function FlowBuilder() {
               <div className="h-48 shrink-0 border-t border-border">
                 <TimelineView
                   flow={currentFlow}
-                  selectedStepId={previewStep?.id ?? null}
-                  onSelectStep={selectStep}
+                  previewStepId={previewStep?.id ?? null}
+                  onPreviewStep={setPreviewStepId}
+                  onOpenSettings={handleOpenSceneSettings}
                   onInsertStep={(index) => openPicker(undefined, index)}
                   onUpdateTransition={updateStepTransition}
                 />
